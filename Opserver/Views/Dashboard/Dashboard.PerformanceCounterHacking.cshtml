@@ -129,29 +129,35 @@
         }
 
         function getPerformanceCounterData(performanceCounterNode) {
-            $.ajax({
-                method: "GET",
-                url: "/performance-counter?node=" + performanceCounterNode.name
-            }).done(function (data) {
-                if (!performanceCounterNode.timeout || performanceCounterNode.timeout < timeout) {
+            if (performanceCounterNode.isExcuting) return;
+
+            if (!performanceCounterNode.timeout || performanceCounterNode.timeout < timeout) {
+                performanceCounterNode.isExcuting = true;
+
+                $.ajax({
+                    method: "GET",
+                    url: "/performance-counter?node=" + performanceCounterNode.name
+                }).done(function (data) {
                     updateChart(performanceCounterNode.hardwareChart, data);
                     updateChart(performanceCounterNode.requestsChart, data);
 
                     $("#hardware-" + performanceCounterNode.name + " img").hide();
                     $("#requests-" + performanceCounterNode.name + " img").hide();
-                }
+                }).fail(function (xhr) {
+                    performanceCounterNode.timeout = minuteInterval;
 
-                if (performanceCounterNode.timeout && performanceCounterNode.timeout > 0) {
-                    performanceCounterNode.timeout -= timeout;
-                }
-            }).fail(function (xhr) {
-                performanceCounterNode.timeout = minuteInterval;
+                    $("#hardware-" + performanceCounterNode.name + " img").show();
+                    $("#requests-" + performanceCounterNode.name + " img").show();
 
-                $("#hardware-" + performanceCounterNode.name + " img").show();
-                $("#requests-" + performanceCounterNode.name + " img").show();
+                    console.error(xhr);
+                }).always(function () {
+                    performanceCounterNode.isExcuting = false;
+                });
+            }
 
-                console.error(xhr);
-            });
+            if (performanceCounterNode.timeout && performanceCounterNode.timeout > 0) {
+                performanceCounterNode.timeout -= timeout;
+            }
         }
 
         window.onload = function () {
