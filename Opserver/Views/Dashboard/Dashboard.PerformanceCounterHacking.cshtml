@@ -1,0 +1,178 @@
+﻿@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using StackExchange.Opserver.Views.Dashboard;
+@model DashboardModel
+@functions {
+    private static string SerializeToJson(object obj)
+    {
+        return JsonConvert.SerializeObject(obj, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+    }
+}
+@foreach (var performanceCounterNode in Model.PerformanceCounterNodes)
+{
+    <div style="width: 49.9%; display: inline-block;">
+        <div id="hardware-@performanceCounterNode.Name" style="position: relative; width: 49.8%; display: inline-block;">
+            <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
+            <canvas></canvas>
+        </div>
+        <div id="requests-@performanceCounterNode.Name" style="position: relative; width: 49.8%; display: inline-block;">
+            <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
+            <canvas></canvas>
+        </div>
+    </div>
+}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/moment.min.js"></script>
+<script>
+        var secondInterval = 1000;
+        var minuteInterval = 60 * secondInterval;
+        var hourInterval = 60 * minuteInterval;
+        var timeout = 2 * secondInterval;
+
+        window.chartColors = {
+            red: "rgb(255, 99, 132)",
+            orange: "rgb(255, 159, 64)",
+            yellow: "rgb(255, 205, 86)",
+            green: "rgb(75, 192, 192)",
+            blue: "rgb(54, 162, 235)",
+            purple: "rgb(153, 102, 255)",
+            grey: "rgb(201, 203, 207)"
+        };
+
+        window.performanceCounterNodes = @Html.Raw(SerializeToJson(Model.PerformanceCounterNodes.Select(x => new { x.Name })));
+
+        function createDataset(label, lineColor) {
+            return {
+                label: label,
+                borderWidth: 1,
+                backgroundColor: lineColor,
+                borderColor: lineColor,
+                fill: false,
+                pointRadius: 0,
+                data: []
+            };
+        }
+
+        function createLineChartConfig(title, datasets, min, suggestedMax, labelString) {
+            return {
+                type: "line",
+                data: {
+                    labels: [],
+                    datasets: datasets
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: title
+                    },
+                    responsive: true,
+                    scales: {
+                        xAxes: [
+                            {
+                                display: false
+                            }
+                        ],
+                        yAxes: [
+                            {
+                                lineWidth: 1,
+                                display: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: labelString
+                                },
+                                ticks: {
+                                    min: min,
+                                    suggestedMax: suggestedMax
+                                }
+                            }
+                        ]
+                    }
+                }
+            };
+        }
+
+        function keepCountByMinutes(array, minutes) {
+            while (array.length > (minutes * minuteInterval) / timeout) {
+                array.splice(0, 1);
+            }
+        }
+
+        function findCounter(name, counters) {
+            return counters.find(function (element) {
+                return element.name === name;
+            });
+        }
+
+        function updateChart(chart, updatedData) {
+            var chartData = chart.config.data;
+
+            keepCountByMinutes(chartData.labels, 10);
+            chartData.labels.push(moment(updatedData.utcTime).format("HH:mm:ss"));
+
+            for (var i = 0; i < chartData.datasets.length; i++) {
+                var counter = findCounter(chartData.datasets[i].label, updatedData.counters);
+
+                keepCountByMinutes(chartData.datasets[i].data, 10);
+                chartData.datasets[i].data.push(counter.value);
+
+            }
+
+            chart.update();
+        }
+
+        function getPerformanceCounterData(performanceCounterNode) {
+            $.ajax({
+                method: "GET",
+                url: "/performance-counter?node=" + performanceCounterNode.name
+            }).done(function (data) {
+                if (!performanceCounterNode.timeout || performanceCounterNode.timeout < timeout) {
+                    updateChart(performanceCounterNode.hardwareChart, data);
+                    updateChart(performanceCounterNode.requestsChart, data);
+
+                    $("#hardware-" + performanceCounterNode.name + " img").hide();
+                    $("#requests-" + performanceCounterNode.name + " img").hide();
+                }
+
+                if (performanceCounterNode.timeout && performanceCounterNode.timeout > 0) {
+                    performanceCounterNode.timeout -= timeout;
+                }
+            }).fail(function (xhr) {
+                performanceCounterNode.timeout = minuteInterval;
+
+                $("#hardware-" + performanceCounterNode.name + " img").show();
+                $("#requests-" + performanceCounterNode.name + " img").show();
+
+                console.error(xhr);
+            });
+        }
+
+        window.onload = function () {
+            for (var i = 0; i < window.performanceCounterNodes.length; i++) {
+                window.performanceCounterNodes[i].hardwareChart = new Chart(
+                    $("#hardware-" + window.performanceCounterNodes[i].name + " canvas"),
+                    createLineChartConfig(
+                        window.performanceCounterNodes[i].name,
+                        [
+                            createDataset("Processor\\% Processor Time\\_Total", window.chartColors.blue),
+                            createDataset("Memory\\% Committed Bytes In Use", window.chartColors.orange)
+                        ], 0, 100, "%"));
+
+                window.performanceCounterNodes[i].requestsChart = new Chart(
+                    $("#requests-" + window.performanceCounterNodes[i].name + " canvas"),
+                    createLineChartConfig(
+                        window.performanceCounterNodes[i].name,
+                        [
+                            createDataset("ASP.NET v4.0.30319\\Requests Current", window.chartColors.green),
+                            createDataset("ASP.NET v4.0.30319\\Requests Queued", window.chartColors.red)
+                        ], 0, 100, "count"));
+            }
+        };
+
+        setInterval(function () {
+            for (var i = 0; i < window.performanceCounterNodes.length; i++) {
+                getPerformanceCounterData(window.performanceCounterNodes[i]);
+            }
+        }, timeout);
+</script>

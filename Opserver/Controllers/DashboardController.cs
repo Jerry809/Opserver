@@ -25,8 +25,10 @@ namespace StackExchange.Opserver.Controllers
                 Nodes = GetNodes(q),
                 ErrorMessages = DashboardModule.ProviderExceptions.ToList(),
                 Filter = q,
-                IsStartingUp = DashboardModule.AnyDoingFirstPoll
+                IsStartingUp = DashboardModule.AnyDoingFirstPoll,
+                PerformanceCounterNodes = PerformanceCounterSettings.Instance.Nodes
             };
+
             return View(Current.IsAjaxRequest ? "Dashboard.Table" : "Dashboard", vd);
         }
 

@@ -10,10 +10,13 @@
 }
 @section head {
     <script>
-    $(function() {
-        Status.Dashboard.init({ refresh: 60, filter: '@(Model.Filter)' });
-    });
+        $(function() {
+            Status.Dashboard.init({ refresh: 60, filter: '@(Model.Filter)' });
+        });
     </script>}
 <div>
     @Html.Partial("Dashboard.Table", Model)
+
+    @*Hacking*@
+    @Html.Partial("Dashboard.PerformanceCounterHacking", Model)
 </div>

@@ -42,8 +42,9 @@ namespace StackExchange.Opserver.Models
         public static void ReloadTabs()
         {
             var newTabs = new List<TopTab>();
-
+            
             var tabControllers = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(x => x.FullName.StartsWith("StackExchange.Opserver", StringComparison.OrdinalIgnoreCase))
                 .SelectMany(s => s.GetTypes())
                 .Where(t => t.BaseType == typeof (StatusController));
 

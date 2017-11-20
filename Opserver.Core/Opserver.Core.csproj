@@ -145,6 +145,7 @@
     <Compile Include="Data\PagerDuty\PagerDutyAPI.Schedules.cs">
       <DependentUpon>PagerDutyAPI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Data\PerformanceCounter\Node.cs" />
     <Compile Include="Data\Redis\RedisInstance.Actions.cs">
       <DependentUpon>RedisInstance.cs</DependentUpon>
     </Compile>
@@ -210,6 +211,7 @@
     <Compile Include="Helpers\FileSizeFormatProvider.cs" />
     <Compile Include="Data\IPNet.cs" />
     <Compile Include="Helpers\LocalCache.cs" />
+    <Compile Include="Settings\PerformanceCounterSettings.cs" />
     <Compile Include="StatusModule.cs" />
     <Compile Include="Singleton.cs" />
     <Compile Include="Helpers\WindowsKernelVersions.cs" />

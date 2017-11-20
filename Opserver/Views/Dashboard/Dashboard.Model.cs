@@ -9,5 +9,6 @@ namespace StackExchange.Opserver.Views.Dashboard
         public List<string> ErrorMessages { get; set; }
         public List<Node> Nodes { get; set; }
         public bool IsStartingUp { get; set; }
+        public List<Data.PerformanceCounter.Node> PerformanceCounterNodes { get; set; }
     }
 }
