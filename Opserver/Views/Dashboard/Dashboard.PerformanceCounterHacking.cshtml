@@ -114,13 +114,13 @@
         function updateChart(chart, updatedData) {
             var chartData = chart.config.data;
 
-            keepCountByMinutes(chartData.labels, 10);
+            keepCountByMinutes(chartData.labels, 5);
             chartData.labels.push(moment(updatedData.utcTime).format("HH:mm:ss"));
 
             for (var i = 0; i < chartData.datasets.length; i++) {
                 var counter = findCounter(chartData.datasets[i].label, updatedData.counters);
 
-                keepCountByMinutes(chartData.datasets[i].data, 10);
+                keepCountByMinutes(chartData.datasets[i].data, 5);
                 chartData.datasets[i].data.push(counter.value);
 
             }
