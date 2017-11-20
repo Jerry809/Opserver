@@ -9,15 +9,15 @@ namespace StackExchange.Opserver.Controllers
     public class PerformanceCounterController : Controller
     {
         [Route("performance-counter")]
-        public async Task<ActionResult> Get(string node)
+        public ActionResult Get(string node)
         {
             var performanceCounterNode =
                 PerformanceCounterSettings.Instance.Nodes.Single(
                     x => x.Name.Equals(node, StringComparison.OrdinalIgnoreCase));
 
             var client = new HttpClient();
-            var response = await client.GetAsync(performanceCounterNode.Url);
-            var responseBody = await response.Content.ReadAsStringAsync();
+            var response = client.GetAsync(performanceCounterNode.Url).Result;
+            var responseBody = response.Content.ReadAsStringAsync().Result;
 
             return this.Content(responseBody, "application/json");
         }

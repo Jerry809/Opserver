@@ -8,18 +8,24 @@
         return JsonConvert.SerializeObject(obj, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
     }
 }
-@foreach (var performanceCounterNode in Model.PerformanceCounterNodes)
-{
-    <div style="width: 49.9%; display: inline-block;">
-        <div id="hardware-@performanceCounterNode.Name" style="position: relative; width: 49.8%; display: inline-block;">
-            <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
-            <canvas></canvas>
+@{
+    var rowCount = Convert.ToInt32(Math.Ceiling(Model.PerformanceCounterNodes.Count / 2d));
+    for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
+    {
+        <div class="row">
+            @foreach (var performanceCounterNode in Model.PerformanceCounterNodes.Skip(rowIndex * 2).Take(2))
+            {
+                <div class="col-md-3" id="hardware-@performanceCounterNode.Name">
+                    <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
+                    <canvas></canvas>
+                </div>
+                <div class="col-md-3" id="requests-@performanceCounterNode.Name">
+                    <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
+                    <canvas></canvas>
+                </div>
+            }
         </div>
-        <div id="requests-@performanceCounterNode.Name" style="position: relative; width: 49.8%; display: inline-block;">
-            <img src="https://cdn3.iconfinder.com/data/icons/tango-icon-library/48/process-stop-48.png" alt="gg" style="position: absolute; top: 50%; left: 50%; margin-top: -24px; margin-left: -24px;" />
-            <canvas></canvas>
-        </div>
-    </div>
+    }
 }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
