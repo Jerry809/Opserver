@@ -8,6 +8,7 @@
         return JsonConvert.SerializeObject(obj, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
     }
 }
+<input type="checkbox" id="onOff"  checked="checked" /> 開啟
 @{
     var rowCount = Convert.ToInt32(Math.Ceiling(Model.PerformanceCounterNodes.Count / 2d));
     for (var rowIndex = 0; rowIndex < rowCount; rowIndex++)
@@ -130,6 +131,7 @@
 
         function getPerformanceCounterData(performanceCounterNode) {
             if (performanceCounterNode.isExcuting) return;
+            if (!(document.getElementById("onOff").checked)) return;
 
             if (!performanceCounterNode.timeout || performanceCounterNode.timeout < timeout) {
                 performanceCounterNode.isExcuting = true;
